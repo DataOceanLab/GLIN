@@ -75,7 +75,7 @@ This paper introduces GLIN, a generic learned index for spatial range queries on
    - pieces: vector of piecewise function. If the user does not choose PIECEWISE setting, this value is empty.
 
 
--Delete geometry from index
+- Delete geometry from index
 
   ` int num_erase = index.erase(poly, "z", cell_xmin,cell_ymin, cell_x_intvl, cell_y_intvl, piecelimitation, pieces);`
     
