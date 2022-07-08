@@ -3,7 +3,7 @@
 ## Introduction
 This paper introduces GLIN, a generic learned index for spatial range queries on complex geometries. To achieve that, GLIN transforms geometries to Z-address intervals, and builds a hierarchical model to learn the cumulative distribution function between these intervals and the record positions. The lightweight hierarchical model greatly shortens the index probing time. Furthermore, GLIN augments spatial range query using an add-on piecewise function to guarantee the query accuracy for both 𝐶𝑜𝑛𝑡𝑎𝑖𝑛𝑠 and 𝐼𝑛𝑡𝑒𝑟𝑠𝑒𝑐𝑡𝑠 spatial relationships.
 
-##Highlights
+## Highlights
 - GLIN transforms geometries to 1-dimensional sortable values,namely Z-address intervals, using Z-order curve.
 - GLIN is the first learned index that handles non-point geospatial values.
 - GLIN updates its index structure efficiently with query accuracy guaranteed.
