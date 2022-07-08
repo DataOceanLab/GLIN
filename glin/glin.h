@@ -152,11 +152,11 @@ namespace alex {
             }
         }
 
-        void bulk_load_with_curveseg(std::vector<geos::geom::Geometry *> geom, double pieceLimitation,
-                                     std::string curve_type,
-                                     double cell_xmin, double cell_ymin,
-                                     double cell_x_intvl, double cell_y_intvl,
-                                     std::vector<std::tuple<double, double, double, double>> &pieces) {
+        void glin_bulk_load(std::vector<geos::geom::Geometry *> geom, double pieceLimitation,
+                            std::string curve_type,
+                            double cell_xmin, double cell_ymin,
+                            double cell_x_intvl, double cell_y_intvl,
+                            std::vector<std::tuple<double, double, double, double>> &pieces) {
             loadCurve(geom, pieceLimitation, curve_type, cell_xmin, cell_ymin, cell_x_intvl, cell_y_intvl,
                       pieces);
             auto it_start = this->begin();
@@ -226,12 +226,12 @@ namespace alex {
         /*
          * find with curve projection with node skipping
          */
-        void find_with_curve(geos::geom::Geometry *query_window, std::string curve_type,
-                             double cell_xmin, double cell_ymin,
-                             double cell_x_intvl, double cell_y_intvl,
-                             std::vector<std::tuple<double, double, double, double>> &pieces,
-                             std::vector<geos::geom::Geometry *> &find_result,
-                             int &count_filter) {
+        void glin_find(geos::geom::Geometry *query_window, std::string curve_type,
+                       double cell_xmin, double cell_ymin,
+                       double cell_x_intvl, double cell_y_intvl,
+                       std::vector<std::tuple<double, double, double, double>> &pieces,
+                       std::vector<geos::geom::Geometry *> &find_result,
+                       int &count_filter) {
             // every time start a finding, the find_result should be empty for each find
             assert(find_result.empty());
             assert(count_filter == 0);
@@ -422,10 +422,10 @@ namespace alex {
         }
 
         std::pair<typename alex::Alex<T, P>::Iterator, bool>
-        insert_with_curve(std::tuple<geos::geom::Geometry*, geos::geom::Envelope*> geo_tuple, std::string curve_type,
-                          double cell_xmin, double cell_ymin,
-                          double cell_x_intvl, double cell_y_intvl, double pieceLimit,
-                          std::vector<std::tuple<double, double, double, double>> &pieces) {
+        glin_insert(std::tuple<geos::geom::Geometry*, geos::geom::Envelope*> geo_tuple, std::string curve_type,
+                    double cell_xmin, double cell_ymin,
+                    double cell_x_intvl, double cell_y_intvl, double pieceLimit,
+                    std::vector<std::tuple<double, double, double, double>> &pieces) {
             // first project the inpute geomeotry
             double range_start;
             double range_end;

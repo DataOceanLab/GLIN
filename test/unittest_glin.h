@@ -11,7 +11,9 @@
 #include <geos/geom/LinearRing.h>
 #include "alex.h"
 #include <map>
-#include "../glin_benchmark/utils.h"
+#include "../glin/glin.h"
+#include "../glin/piecewise.h"
+//#include "../glin_benchmark/utils.h"
 #include <geos/index/strtree/SimpleSTRtree.h>
 #include <geos/index/strtree/GeometryItemDistance.h>
 #include <geos/index/ItemVisitor.h>
@@ -21,6 +23,13 @@
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
+typedef boost::geometry::model::point<double, 2, boost::geometry::cs::cartesian> point_type;
+typedef boost::geometry::model::linestring<point_type> linestring_type;
+typedef boost::geometry::model::polygon<point_type> polygon_type;
+typedef boost::geometry::model::segment<point_type> segment_type;
+typedef boost::geometry::model::multi_linestring<linestring_type> multi_lingstring_type;
+typedef boost::geometry::model::multi_polygon<polygon_type> mpolygon_type;
+typedef boost::variant<point_type, linestring_type, polygon_type, segment_type, multi_lingstring_type, mpolygon_type> geometryVariant;
 //create non random size geometry, can choose which geometry to skip
 std::vector<geos::geom::Geometry *>
 create_geoms_non_random(int num_of_poly, bool choose_skip, double geom_side_length) {
@@ -134,7 +143,7 @@ TEST_SUITE("GLIN bulk load and find") {
         }
 
         //load into index
-        index.bulk_load_with_curveseg(poly_vec, error_bound, "z", -10.0, -10.0, 5.0, 5.0, pieces);
+        index.glin_bulk_load(poly_vec, error_bound, "z", -10.0, -10.0, 5.0, 5.0, pieces);
         // Iterator from beginning to end
         int num_keys = 0;
         for (auto it = index.begin(); it != index.end(); ++it) {
@@ -143,7 +152,7 @@ TEST_SUITE("GLIN bulk load and find") {
         }
         CHECK_EQ(100, num_keys);
 
-        index.find_with_curve(query, "z", -10.0, -10.0, 3.0, 3.0, pieces, find_result, count_filter);
+        index.glin_find(query, "z", -10.0, -10.0, 3.0, 3.0, pieces, find_result, count_filter);
         CHECK(find_result.size() == count);
 
 
@@ -164,10 +173,10 @@ TEST_SUITE("GLIN bulk load and find") {
         std::vector<Geometry *> find_result_non_radm;
         int count_filter = 0;
         double piecelimit = 10;
-        index.bulk_load_with_curveseg(poly_vec, piecelimit, "z", -300.0, -100.0, 0.05, 0.05, pieces_non_radm);
+        index.glin_bulk_load(poly_vec, piecelimit, "z", -300.0, -100.0, 0.05, 0.05, pieces_non_radm);
 //        std::cout << pieces_non_radm.size() << std::endl;
-        index.find_with_curve(poly_vec_qw[0], "z", -300.0, -100.0, 0.05, 0.05, pieces_non_radm, find_result_non_radm,
-                              count_filter);
+        index.glin_find(poly_vec_qw[0], "z", -300.0, -100.0, 0.05, 0.05, pieces_non_radm, find_result_non_radm,
+                        count_filter);
         double count = 0;
         for (auto &i: poly_vec) {
             if (poly_vec_qw[0]->contains(i)) {
@@ -179,7 +188,7 @@ TEST_SUITE("GLIN bulk load and find") {
             }
 #endif
         }
-        std::cout << find_result_non_radm.size() << " and " << count << std::endl;
+        std::cout << "result from index search is " << find_result_non_radm.size() << " and " <<"Ground truth is "<< count << std::endl;
         CHECK(find_result_non_radm.size() == count);
     }
 
@@ -226,8 +235,8 @@ TEST_SUITE("GLIN bulk load and find") {
         geos::geom::Polygon *query = global_factory->createPolygon(outer4, NULL);
 
         index_non_radm.loadCurve(poly_vec, error_bound, "z", -3000.0, -1000.0, 5.0, 5.0, pieces_non_radm);
-        index_non_radm.find_with_curve(query, "z", -3000.0, -1000.0, 5.0, 5.0, pieces_non_radm, find_result_non_radm,
-                                       count_filter);
+        index_non_radm.glin_find(query, "z", -3000.0, -1000.0, 5.0, 5.0, pieces_non_radm, find_result_non_radm,
+                                 count_filter);
         // count intersection and compare with the find result.
         double count = 0;
         for (auto &i: poly_vec) {
@@ -359,23 +368,7 @@ TEST_SUITE("index compare tests") {
             geos::geom::Polygon *poly_qw = global_factory->createPolygon(lrqw, NULL);
             poly_vec_qw.push_back(poly_qw);
         }
-/*
- * read from files to debug
- */
-//        read_whole_records("/Users/cwang/Desktop/glin_dataset/TIGER_2015_RAILS.csv", poly_vec, boost_geom_vector);
-//        read_qw_records("/Users/cwang/Desktop/glin_dataset/querywindows/TIGER_2015_RAILS.csv_1.0E-4.txt", poly_vec_qw);
-//        double num_of_poly = poly_vec.size();
-//        index_non_radm.bulk_load_with_lineseg(poly_vec, seg_non_radm, error_bound, pieces_non_radm);
-//        long double qw_result_sum = 0;
-//        for (int i = 0; i < poly_vec_qw.size(); i++) {
-//            std::vector<geos::geom::Geometry *> find_result_comp_non_r;
-//            int count_filter = 0;
-//            index_non_radm.find_with_lineseg(poly_vec_qw[i], seg_non_radm, pieces_non_radm, find_result_comp_non_r,
-//                                             count_filter);
-//            qw_result_sum += find_result_comp_non_r.size();
-//        }
-//        long double avg_result = qw_result_sum / poly_vec_qw.size();
-//        std::cout << "glin result " << setprecision(15) << avg_result << std::endl;
+
         /*
          * Rtree running
          */
@@ -398,11 +391,7 @@ TEST_SUITE("index compare tests") {
             rtree_result_sum += Rtree_refine.size();
         }
 
-//        long double avg_rtree_result = rtree_result_sum / poly_vec_qw.size();
-////        std::cout << "rtree avg is "<< setprecision(15) <<avg_rtree_result << std::endl;
-//        auto tree_stop = std::chrono::high_resolution_clock::now();
-//        auto tree_duration = std::chrono::duration_cast<std::chrono::microseconds>(tree_stop - tree_start);
-//        std::cout << "rtree duration " << tree_duration.count() << " microseconds" << endl;
+
         /*
          * quadtree running
          */
@@ -633,14 +622,13 @@ TEST_SUITE("index compare tests") {
         geos::geom::Polygon *query_window = global_factory->createPolygon(outer4, NULL);
         int count_filter = 0;
         index1.find_with_lineseg(query_window, seg_non_radm, pieces, find_result, count_filter);
-        std::cout << count_filter << std::endl;
+
         int count = 0;
         for (auto &i: poly_vec) {
             if (query_window->intersects(i)) {
                 count += 1;
             }
         }
-        std::cout << " count " << count << endl;
         CHECK(count == find_result.size());
         CHECK(find_result.size() <= count_filter);
     }
@@ -666,7 +654,6 @@ TEST_SUITE("index compare tests") {
         std::vector<Value> returned_values;
         boost_rtree.query(boost::geometry::index::intersects(box1),std::back_inserter(returned_values));
         for(auto candi: returned_values){
-            std::cout << candi.second << std::endl;
         }
 
         std::unique_ptr<geos::geom::PrecisionModel> pm(new geos::geom::PrecisionModel());
@@ -753,7 +740,6 @@ TEST_SUITE("avgdiff"){
         records[5].second = 7;
         std::vector<std::tuple<double, double, double, double>> pieces;
         piecewise(records, size, 3, pieces);
-        std::cout << "test test test" << std::endl;
 //        for (int i = 0; i < pieces.size(); i++) {
 //            std::cout << get<0>(pieces[i]) << "  " << get<1>(pieces[i]) << "  " << get<2>(pieces[i]) << "  "
 //                      << get<3>(pieces[i]) << endl;

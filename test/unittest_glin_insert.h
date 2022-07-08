@@ -63,7 +63,7 @@ create_geoms_non_random1(int num_of_poly, bool choose_skip, double geom_side_len
 
 
 TEST_SUITE("insert test suite with geometry") {
-    TEST_CASE("insert senario one: normal insert, single piece") {
+    TEST_CASE("insert senario one: normal insert, single piece, line projection") {
         int num_of_poly = 50;
         double poly_length = 20;
         std::vector<geos::geom::Geometry *> geometrys;
@@ -255,7 +255,7 @@ TEST_SUITE("insert to head geometry") {
             geos::geom::Polygon *poly6 = global_factory->createPolygon(lr6, NULL);
             geometries.push_back(poly6);
         }
-        index.load(geometries, seg, pieceLimitation, pieces);
+        index.bulk_load_with_lineseg(geometries, seg, pieceLimitation, pieces);
 
 #ifdef DEBUG
         std::cout << "insert beginning before insertion" << endl;
@@ -307,7 +307,7 @@ TEST_SUITE("insert to head geometry") {
         alex::Glin<double, geos::geom::Geometry *> index1;
         std::vector<geos::geom::Geometry *> head_inser_poly = create_geoms_non_random1(num_of_poly, false, poly_length,
                                                                                        true);
-        index1.load(head_inser_poly, seg, pieceLimitation, pieces2);
+        index1.bulk_load_with_lineseg(head_inser_poly, seg, pieceLimitation, pieces2);
 #ifdef DEBUG
         std::cout << "after insertion to head vector do bulkload" << endl;
 #endif
